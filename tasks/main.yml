@@ -1,0 +1,39 @@
+---
+
+- name: Create ingress config directory
+  command: "mkdir -p {{ ingress_config_dir }}"
+
+- name: ingress location
+  file:
+    state: directory
+    path: "{{ ingress_config_dir }}"
+    owner: "root"
+    group: "root"
+    mode: 0755
+
+- name: Copy ingress triggers
+  template:
+    src: ingress_triggers.yml.j2
+    dest: "{{ ingress_config_dir }}/ingress_triggers.yml"
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Get trigger SHA sum
+  stat:
+    checksum_algorithm: sha256
+    path: "{{ ingress_config_dir }}/ingress_triggers.yml"
+  register: trigger_sha_sum
+
+- name: Copy ingress config
+  template:
+    src: ingress.yml.j2
+    dest: "{{ ingress_config_dir }}/ingress.yml"
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Apply ingress resources
+  command: "kubectl apply -f {{ ingress_config_dir }}/ingress_triggers.yml -f {{ ingress_config_dir }}/ingress.yml"
+
+...

@@ -1,0 +1,7 @@
+---
+
+ingress_namespace: "{{ kubernetes_namespace | default('default') }}"
+ingress_config_dir: "{{ kubernetes_namespace_dir }}/ingress"
+ingress_tolerate_master: false
+
+...

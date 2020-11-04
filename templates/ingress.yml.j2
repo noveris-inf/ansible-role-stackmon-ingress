@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ingress-ds
+  namespace: {{ ingress_namespace }}
+  labels:
+    app: ingress-app
+spec:
+  selector:
+    matchLabels:
+      app: ingress-app
+  template:
+    metadata:
+      annotations:
+        triggerHash: "{{ trigger_sha_sum['stat']['checksum'] }}"
+      namespace: {{ ingress_namespace }}
+      labels:
+        app: ingress-app
+    spec:
+      tolerations:
+{% if ingress_tolerate_master | default(false) %}
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+{% endif %}
+      volumes:
+        - name: ingress-config
+          configMap:
+            name: ingress-config
+      containers:
+        - name: ingress
+          image: docker.io/library/haproxy:2.2.4
+          ports:
+            - containerPort: 5601
+              hostPort: 5601
+            - containerPort: 9200
+              hostPort: 9200
+            - containerPort: 5044
+              hostPort: 5044
+          volumeMounts:
+            - name: ingress-config
+              mountPath: "/usr/local/etc/haproxy/"

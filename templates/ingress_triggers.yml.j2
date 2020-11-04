@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-config
+  namespace: {{ kibana_namespace }}
+  labels:
+    app: ingress-app
+data:
+  haproxy.cfg: |
+    global
+
+    defaults
+      log stdout format rfc3164 daemon
+      timeout connect 10s
+      timeout client 30s
+      timeout server 30s
+      mode tcp
+      option tcplog
+      option dontlognull
+
+    frontend elasticsearch-frontend
+    bind *:9200
+    default_backend elasticsearch-backend
+
+    backend elasticsearch-backend
+    server elastic elastic-svc:9200
+
+    frontend kibana-frontend
+    bind *:5601
+    default_backend kibana-backend
+
+    backend kibana-backend
+    server kibana kibana-svc:5601
+
+    frontend logstash-beats-frontend
+    bind *:5044
+    default_backend logstash-beats-backend
+
+    backend logstash-beats-backend
+    server logstash logstash-svc:5044
